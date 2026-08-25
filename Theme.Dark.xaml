@@ -1,0 +1,59 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- =====================================================================
+         "Amber Glass" - Dark palette. Same key set as Theme.Light.xaml - see
+         that file for the role of each key. Values below are chosen so text
+         stays legible on dark surfaces, not by mechanically inverting light.
+         ===================================================================== -->
+
+    <!-- Accent - same brand hue as light. AccentBrushDarker's ROLE is "high
+         contrast accent for text/links", which on a dark surface means going
+         brighter, not darker (the light-theme value, #8A6400, is a dark brown
+         that would be nearly invisible on a dark background). -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#FFC300"/>
+    <SolidColorBrush x:Key="AccentBrushDark" Color="#E0A800"/>
+    <SolidColorBrush x:Key="AccentBrushDarker" Color="#E7B646"/>
+    <SolidColorBrush x:Key="AccentBrushLight" Color="#4DFFC300"/>
+
+    <!-- Neutral surfaces - Windows 11 dark app convention: window background
+         near-black, cards a shade lighter than the window for a raised feel. -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#F2282828"/>
+    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#26FFFFFF"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#14FFFFFF"/>
+    <!-- Alternating DataGrid rows lighten instead of darken - darkening an
+         already-dark row by the light theme's 8% black is nearly invisible. -->
+    <SolidColorBrush x:Key="AlternatingRowBrush" Color="#0FFFFFFF"/>
+
+    <!-- Form fields -->
+    <SolidColorBrush x:Key="FieldBrush" Color="#FF2B2B2B"/>
+    <SolidColorBrush x:Key="FieldMutedBrush" Color="#CC2B2B2B"/>
+    <SolidColorBrush x:Key="FieldMutedPressedBrush" Color="#5C4A1E"/>
+
+    <!-- Text -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#ABABAB"/>
+    <!-- Unchanged: still dark text sitting on the (unchanged) bright yellow
+         accent buttons. -->
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#1A1A1A"/>
+
+    <!-- Semantic - DangerBrush stays the same saturated red used for solid
+         buttons/chips (white text on top still reads fine). DangerTextBrush
+         is a lighter coral so red text sitting directly on a dark card is
+         actually legible, instead of dark-red-on-near-black. -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="DangerBrushDark" Color="#A4221A"/>
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#FF8A80"/>
+    <SolidColorBrush x:Key="InfoTintBrush" Color="#3D3316"/>
+    <SolidColorBrush x:Key="DangerTintBrush" Color="#3D201D"/>
+    <SolidColorBrush x:Key="DangerTintBorderBrush" Color="#5C2E29"/>
+
+    <!-- Elevation - a soft light-colored shadow wouldn't show on a dark
+         background, so lean on a slightly stronger/tighter dark shadow
+         instead; the card border (SurfaceBorderBrush) carries more of the
+         separation duty here than in the light theme. -->
+    <DropShadowEffect x:Key="CardShadow" Color="#000000" Direction="270" ShadowDepth="1" BlurRadius="14" Opacity="0.5"/>
+
+</ResourceDictionary>

@@ -20,9 +20,9 @@
 
             <!-- Fluent-style progress ring -->
             <Grid Width="24" Height="24" Margin="0,0,12,0">
-                <Ellipse Width="24" Height="24" Stroke="{StaticResource SurfaceBorderBrush}" StrokeThickness="3"/>
+                <Ellipse Width="24" Height="24" Stroke="{DynamicResource SurfaceBorderBrush}" StrokeThickness="3"/>
                 <Ellipse Width="24" Height="24"
-                         Stroke="{StaticResource AccentBrushDark}"
+                         Stroke="{DynamicResource AccentBrushDark}"
                          StrokeThickness="3"
                          StrokeDashArray="1.6 10"
                          StrokeStartLineCap="Round"
@@ -36,7 +36,7 @@
 
             <!-- Static Loading text -->
             <TextBlock Text="Loading..."
-                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
                        FontSize="13"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"/>

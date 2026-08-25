@@ -238,21 +238,8 @@ namespace ip
             DataContext = vm;
             Closed += (sender, e) => closed = true;
 
-            // Windows 11 rounded window corners, and tinting the title bar to match the
-            // app's current theme instead of leaving it the plain default OS color.
-            // Both safely no-op on Windows 10 / older Windows 11 builds.
-            SourceInitialized += (sender, e) =>
-            {
-                WindowBackdrop.Apply(this);
-                WindowBackdrop.ApplyCaptionColor(this);
-                // Live-follow the OS light/dark toggle while the app is running, instead of
-                // only picking up the current theme at launch.
-                WindowBackdrop.WatchForThemeChange(this, () =>
-                {
-                    App.ApplyTheme(App.IsSystemDarkTheme());
-                    WindowBackdrop.ApplyCaptionColor(this);
-                });
-            };
+            // Windows 11 rounded window corners. Safely no-ops on Windows 10.
+            SourceInitialized += (sender, e) => WindowBackdrop.Apply(this);
         }
 
         #endregion
@@ -287,7 +274,7 @@ namespace ip
         // TESTING ONLY - bypasses the WhatsApp OTP activation flow so the
         // Machine Type / Status tabs are reachable without a real phone
         // number. Set back to false before shipping.
-        private const bool SkipLoginForTesting = true;
+        private const bool SkipLoginForTesting = false;
 
         private static bool loggedIn;
 
@@ -1301,12 +1288,8 @@ namespace ip
         {
             var show = nicData?.Any(static item => item.status == "Up") ?? false;
             var isValidSelection = selectedNIC?.status == "Up";
-            // Previously hardcoded the light theme's literal colors here (#FFF3C4 / #8A6400),
-            // bypassing the theme system entirely - this banner would've stayed pale yellow
-            // with near-black text even in dark mode. Look the current theme's brushes up by
-            // resource key instead, same as everything driven from XAML.
-            ntfSelectThenNext1.Background = isValidSelection ? Brushes.Transparent : (Brush)TryFindResource("AccentBrushLight");
-            ntfSelectThenNext1Text.Foreground = isValidSelection ? (Brush)TryFindResource("TextPrimaryBrush") : (Brush)TryFindResource("AccentBrushDarker");
+            ntfSelectThenNext1.Background = isValidSelection ? Brushes.Transparent : new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xF3, 0xC4)); // AccentColorLight
+            ntfSelectThenNext1Text.Foreground = isValidSelection ? Brushes.Black : new SolidColorBrush(Color.FromRgb(0x8A, 0x64, 0x00)); // AccentColorDarker
             ntfSelectThenNext1Button.IsEnabled = isValidSelection;
         }
 

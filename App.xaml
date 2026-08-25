@@ -302,6 +302,7 @@
 
             <Style TargetType="DataGrid">
                 <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="RowBackground" Value="Transparent"/>
                 <Setter Property="AlternatingRowBackground" Value="{DynamicResource AlternatingRowBrush}"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -315,6 +316,14 @@
                 <Setter Property="FontSize" Value="13"/>
             </Style>
 
+            <!-- Explicit ControlTemplate (not just property Setters): the stock
+                 Aero2 DataGridColumnHeader chrome (Microsoft.Windows.Themes.DataGridHeaderBorder)
+                 paints some of its own text/background visuals that a plain
+                 Foreground/Background Setter can't reliably override on every
+                 Windows version - the symptom is a header that renders with no
+                 visible text once the app is on a non-default palette. Owning
+                 the template outright guarantees the header text always paints
+                 with our theme brushes. -->
             <Style TargetType="DataGridColumnHeader">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -323,13 +332,53 @@
                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridColumnHeader">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                   ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                   VerticalAlignment="Center"
+                                                   TextElement.Foreground="{TemplateBinding Foreground}"
+                                                   TextElement.FontWeight="{TemplateBinding FontWeight}"
+                                                   TextElement.FontSize="{TemplateBinding FontSize}"
+                                                   RecognizesAccessKey="False"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
+            <!-- Same reasoning as DataGridColumnHeader above - own the cell chrome
+                 outright instead of leaning on the default template, and give the
+                 cell an explicit theme Foreground as a backstop for any cell
+                 content that doesn't set its own (Foreground is inherited, but
+                 without this Setter it inherits from the Control default, i.e.
+                 system black, not our theme). -->
             <Style TargetType="DataGridCell">
                 <Setter Property="Focusable" Value="False"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridCell">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style TargetType="DataGridRow">

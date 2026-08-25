@@ -81,7 +81,10 @@ namespace ip
                 get => _selectedMachineType;
                 set
                 {
-                    if (!(_selectedMachineType?.System.Equals(value.System) ?? false))
+                    // Guard against a null incoming value (e.g. the DataGrid selection
+                    // being cleared) - the previous code dereferenced value.System
+                    // unconditionally and threw a NullReferenceException here.
+                    if (!(_selectedMachineType?.System?.Equals(value?.System) ?? false))
                         _pingValues.Clear();
                     InitChart();
                     Set(ref _selectedMachineType, value, nameof(SelectedMachineType));
@@ -243,6 +246,13 @@ namespace ip
 
         #region Instance fields
 
+        // A single shared HttpClient for the app's lifetime. The previous code created a new
+        // HttpClient per request (including in a tight-ish version/countries/OTP/image-fetch
+        // path) - a well-known .NET anti-pattern that can exhaust available sockets under load
+        // because each HttpClient owns its own connection pool that isn't released promptly on
+        // disposal (SocketException: "unable to connect" after enough churn).
+        private static readonly HttpClient httpClient = new();
+
         #region Window state
 
         private bool closed;
@@ -359,7 +369,7 @@ namespace ip
                         return false;
                     }
                     Increase(ref Notifications.loadingSpinnerNic);
-                    var response = await new HttpClient().PostAsync("https://he3.co.za/support/ip/verify_login", new StringContent(JsonSerializer.Serialize(new { phone, md5 })));
+                    var response = await httpClient.PostAsync("https://he3.co.za/support/ip/verify_login", new StringContent(JsonSerializer.Serialize(new { phone, md5 })));
                     Decrease(ref Notifications.loadingSpinnerNic);
                     if ((int)response.StatusCode >= 200 && (int)response.StatusCode <= 299)
                     {
@@ -394,7 +404,7 @@ namespace ip
                 {
                     regKey.SetValue("Phone", phone);
                     Increase(ref Notifications.loadingSpinnerNic);
-                    var response = await new HttpClient().PostAsync("https://he3.co.za/whatsapp/send", new StringContent(JsonSerializer.Serialize(new { phone, template = "z_winapp_code", data = new { } })));
+                    var response = await httpClient.PostAsync("https://he3.co.za/whatsapp/send", new StringContent(JsonSerializer.Serialize(new { phone, template = "z_winapp_code", data = new { } })));
                     Decrease(ref Notifications.loadingSpinnerNic);
                     if (!((int)response.StatusCode >= 200 && (int)response.StatusCode <= 299))
                     {
@@ -446,7 +456,7 @@ namespace ip
             try
             {
                 Increase(ref Notifications.loadingSpinnerNic);
-                var response = await new HttpClient().PostAsync("https://he3.co.za/support/ip/verify_login", new StringContent(JsonSerializer.Serialize(new { phone, md5 })));
+                var response = await httpClient.PostAsync("https://he3.co.za/support/ip/verify_login", new StringContent(JsonSerializer.Serialize(new { phone, md5 })));
                 Decrease(ref Notifications.loadingSpinnerNic);
                 RefreshNotifications();
                 if ((int)response.StatusCode >= 200 && (int)response.StatusCode <= 299)
@@ -577,9 +587,18 @@ namespace ip
             }
 
             // Jumbo Frame
-            vm.jumbo_frame_yes = string.IsNullOrWhiteSpace(selectedMachineType.JumboFrame.Replace("-", "")) || selectedMachineType.JumboFrame.Equals(selectedNIC.jumboFrame) || speed(selectedMachineType.JumboFrame) == speed(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
-            vm.jumbo_frame_maybe = vm.jumbo_frame_yes == Visibility.Collapsed && !string.IsNullOrWhiteSpace(selectedMachineType.JumboFrame) && string.IsNullOrWhiteSpace(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
-            vm.jumbo_frame_no = vm.jumbo_frame_yes == Visibility.Collapsed && !string.IsNullOrWhiteSpace(selectedMachineType.JumboFrame) && string.IsNullOrWhiteSpace(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
+            // JumboFrame is a nullable CSV column (ip.models.MachineType.JumboFrame) - guard
+            // every access with ?. so a blank cell doesn't throw a NullReferenceException here
+            // (this block isn't wrapped in try/catch, so that used to crash the UI thread).
+            var jumboRequired = !string.IsNullOrWhiteSpace(selectedMachineType.JumboFrame?.Replace("-", ""));
+            vm.jumbo_frame_yes = !jumboRequired || (selectedMachineType.JumboFrame?.Equals(selectedNIC.jumboFrame) ?? false) || speed(selectedMachineType.JumboFrame) == speed(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
+            // "maybe": the NIC's jumbo frame setting couldn't be read at all, so we can't tell -
+            // point the user at Device Manager to check/set it themselves.
+            vm.jumbo_frame_maybe = vm.jumbo_frame_yes == Visibility.Collapsed && jumboRequired && string.IsNullOrWhiteSpace(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
+            // "no": the NIC's jumbo frame setting IS known and definitively doesn't match what's
+            // required. Previously this had the exact same condition as "maybe" above, so the two
+            // states always fired together and never distinguished "unknown" from "confirmed wrong".
+            vm.jumbo_frame_no = vm.jumbo_frame_yes == Visibility.Collapsed && jumboRequired && !string.IsNullOrWhiteSpace(selectedNIC.jumboFrame) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private bool IsFailedToSetIPAddress()
@@ -632,7 +651,6 @@ namespace ip
                 }
                 Dispatcher.Invoke(() => RefreshNotifications());
                 vm?.AddPing(ping);
-                Thread.Sleep(1000);
             }
 
             Dispatcher.Invoke(() =>
@@ -685,7 +703,9 @@ namespace ip
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = $@"cmd.exe",
-                        Arguments = $@"/k {directoryName}\amcoza_ip_run.bat",
+                        // /c runs the batch and exits; the previous /k left cmd.exe sitting at an
+                        // interactive prompt forever, leaking one orphaned process per IP-set attempt.
+                        Arguments = $@"/c {directoryName}\amcoza_ip_run.bat",
                         UseShellExecute = false,
                         // Verb = "runas",
                         WorkingDirectory = directoryName,
@@ -727,16 +747,28 @@ namespace ip
             return true;
         }
 
-        private string GetAdvancedNICProperty(string nicName, string propertyName)
+        // NOTE: the previous implementation never actually matched on nicId - it returned the
+        // "jumbo"-named property of the FIRST adapter subkey it found in registry enumeration
+        // order, regardless of which NIC was being queried. That meant the Jumbo Frame Yes/Maybe/No
+        // status shown to the user could reflect a completely different network adapter. Fixed by
+        // matching each subkey's NetCfgInstanceId (the adapter GUID Windows stores there) against
+        // the NIC's Id (NetworkInterface.Id uses the same GUID), and by actually using the
+        // propertyName argument instead of a hardcoded "jumbo" literal.
+        private string GetAdvancedNICProperty(string nicId, string propertyName)
         {
-            var adapters = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}");
+            using var adapters = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}");
             if (adapters != null)
                 foreach (var adapter in adapters.GetSubKeyNames().Where(key => int.TryParse(key, out var result)))
                 {
-                    var adapterAdvancedProperties = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Control\Class\{{4d36e972-e325-11ce-bfc1-08002be10318}}\{adapter}");
+                    using var adapterAdvancedProperties = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Control\Class\{{4d36e972-e325-11ce-bfc1-08002be10318}}\{adapter}");
+                    var instanceId = adapterAdvancedProperties?.GetValue("NetCfgInstanceId")?.ToString();
+                    if (instanceId == null || !instanceId.Equals(nicId, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     foreach (var property in adapterAdvancedProperties.GetValueNames())
-                        if (property.ToLower().Contains("jumbo"))
+                        if (property.ToLower().Contains(propertyName.ToLower()))
                             return adapterAdvancedProperties.GetValue(property).ToString();
+                    return null; // matched adapter, but it has no such advanced property
                 }
             return null;
         }
@@ -869,7 +901,10 @@ namespace ip
             Increase(ref Notifications.loadingSpinnerMachineType);
             try
             {
-                var data = await new HttpClient().GetStreamAsync("http://am.co.za/icon/ip/devices.csv");
+                // Was plain http:// - unencrypted, so the machine-type/device-IP mapping data (which
+                // is later used to push network config) could be tampered with in transit. The image
+                // fetch two lines below already correctly uses https on the same host.
+                var data = await httpClient.GetStreamAsync("https://am.co.za/icon/ip/devices.csv");
                 using var reader = new StreamReader(data);
                 using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
                 var records = csv.GetRecords<MachineType>().ToList();
@@ -877,7 +912,7 @@ namespace ip
                 {
                     try
                     {
-                        var imageBytes = await new HttpClient().GetByteArrayAsync($"https://am.co.za/icon/ip/{record.ID}.png");
+                        var imageBytes = await httpClient.GetByteArrayAsync($"https://am.co.za/icon/ip/{record.ID}.png");
                         using var stream = new MemoryStream(imageBytes);
                         var image = new BitmapImage();
                         image.BeginInit();
@@ -915,10 +950,17 @@ namespace ip
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Continuous UI refresh
+            // Refresh() only slept internally while actively pinging a selected device; with no
+            // NIC/machine type selected yet (e.g. right after launch) this was an unthrottled busy
+            // loop re-enumerating adapters and running WMI queries as fast as the CPU allowed. The
+            // pacing now lives here unconditionally so every cycle - idle or active - is ~1s.
             new Thread(() =>
             {
                 while (!closed)
+                {
                     Refresh();
+                    Thread.Sleep(1000);
+                }
             }).Start();
 
             // Populate Machine Type DataGrid
@@ -931,7 +973,7 @@ namespace ip
                 {
                     try
                     {
-                        var latestVersion = await new HttpClient().GetStringAsync("https://he3.co.za/support/ip/version");
+                        var latestVersion = await httpClient.GetStringAsync("https://he3.co.za/support/ip/version");
                         if (!string.IsNullOrWhiteSpace(latestVersion) && !Version.shortVersion.Equals(latestVersion))
                         {
                             NotificationVersion(latestVersion);
@@ -953,7 +995,7 @@ namespace ip
                     Country[] countries;
                     try
                     {
-                        countries = await new HttpClient().GetFromJsonAsync<Country[]>("https://he3.co.za/support/public/ip/countries");
+                        countries = await httpClient.GetFromJsonAsync<Country[]>("https://he3.co.za/support/public/ip/countries");
                     }
                     catch
                     {

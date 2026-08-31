@@ -2,57 +2,76 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- =====================================================================
-         "Amber Glass" - Light palette (Windows 11 style, yellow brand accent)
+         "Amber Glass" - Light palette (Windows 11 Fluent 2 style, gold brand accent)
          Every key here has an identical-named counterpart in Theme.Dark.xaml.
          App.xaml's styles reference these via DynamicResource so App.xaml.cs
          can swap the merged dictionary at runtime (startup + live OS theme
          change) and every window repaints without needing a restart.
          ===================================================================== -->
 
-    <!-- Accent (brand yellow) - stays the same hue in both themes; only the
-         roles that need to read as "dark text" flip since dark-on-dark would
-         be invisible. -->
+    <!-- Accent (brand gold/amber) -->
     <SolidColorBrush x:Key="AccentBrush" Color="#FFC300"/>
     <SolidColorBrush x:Key="AccentBrushDark" Color="#E0A800"/>
     <SolidColorBrush x:Key="AccentBrushDarker" Color="#8A6400"/>
-    <!-- Translucent accent overlay - used for hover/selected tints. Being an
-         alpha overlay rather than a flat pastel, it adapts to whatever
-         surface sits behind it, so light and dark can share one value. -->
-    <SolidColorBrush x:Key="AccentBrushLight" Color="#4DFFC300"/>
+    <SolidColorBrush x:Key="AccentBrushLight" Color="#33FFC300"/>
+    <SolidColorBrush x:Key="AccentBrushSubtle" Color="#1AFFC300"/>
 
     <!-- Neutral surfaces -->
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F3F3F3"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#F2FFFFFF"/>
-    <!-- ~95% opaque white "glass" card -->
-    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#1F000000"/>
-    <SolidColorBrush x:Key="DividerBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F4F6"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FAFFFFFF"/>
+    <SolidColorBrush x:Key="CardBackgroundElevatedBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#1E000000"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#EAEAEF"/>
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#12000000"/>
     <SolidColorBrush x:Key="HoverBrush" Color="#0D000000"/>
-    <SolidColorBrush x:Key="AlternatingRowBrush" Color="#08000000"/>
+    <SolidColorBrush x:Key="AlternatingRowBrush" Color="#06000000"/>
 
     <!-- Form fields (TextBox / ComboBox / popup surfaces) -->
     <SolidColorBrush x:Key="FieldBrush" Color="#FFFFFFFF"/>
-    <SolidColorBrush x:Key="FieldMutedBrush" Color="#CCFFFFFF"/>
+    <SolidColorBrush x:Key="FieldMutedBrush" Color="#F5F5F7"/>
     <SolidColorBrush x:Key="FieldMutedPressedBrush" Color="#FFEDB8"/>
 
-    <!-- Text -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1B1B1B"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5F5F5F"/>
-    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#1A1A1A"/>
+    <!-- Badges & Chips -->
+    <SolidColorBrush x:Key="BadgeBackgroundBrush" Color="#ECECEF"/>
+    <SolidColorBrush x:Key="BadgeBorderBrush" Color="#22000000"/>
+    <SolidColorBrush x:Key="BadgeTextBrush" Color="#4A4A4A"/>
+    <SolidColorBrush x:Key="BadgeAccentBackgroundBrush" Color="#FFF7DA"/>
+    <SolidColorBrush x:Key="BadgeAccentTextBrush" Color="#8A6400"/>
 
-    <!-- Semantic -->
-    <!-- DangerBrush: solid danger surfaces (buttons, the "IP Conflict Detected"
-         chip) that always carry white text on top. DangerTextBrush: red text
-         sitting directly on a card background - needs to stay legible against
-         SurfaceBrush, which is a different contrast requirement, hence a
-         separate key rather than reusing DangerBrush for both roles. -->
-    <SolidColorBrush x:Key="DangerBrush" Color="#C42B1C"/>
-    <SolidColorBrush x:Key="DangerBrushDark" Color="#A4221A"/>
-    <SolidColorBrush x:Key="DangerTextBrush" Color="#C42B1C"/>
-    <SolidColorBrush x:Key="InfoTintBrush" Color="#FFF7DA"/>
+    <!-- Text & Typography -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1C1C1E"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#636366"/>
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#8E8E93"/>
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="StatValueBrush" Color="#111113"/>
+    <SolidColorBrush x:Key="StatLabelBrush" Color="#6E6E73"/>
+
+    <!-- Semantic: Success / Connected -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#107C41"/>
+    <SolidColorBrush x:Key="SuccessDarkBrush" Color="#0B5A2F"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#107C41"/>
+    <SolidColorBrush x:Key="SuccessTintBrush" Color="#EDF7F1"/>
+    <SolidColorBrush x:Key="SuccessTintBorderBrush" Color="#C1E7CF"/>
+
+    <!-- Semantic: Info / Warning / Attention -->
+    <SolidColorBrush x:Key="InfoTintBrush" Color="#FFF8E7"/>
+    <SolidColorBrush x:Key="InfoTintBorderBrush" Color="#FCE09B"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#D97706"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#B45309"/>
+    <SolidColorBrush x:Key="WarningTintBrush" Color="#FFFBEB"/>
+    <SolidColorBrush x:Key="WarningTintBorderBrush" Color="#FDE68A"/>
+
+    <!-- Semantic: Danger / Error / Conflict -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#D32F2F"/>
+    <SolidColorBrush x:Key="DangerBrushDark" Color="#B71C1C"/>
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#C62828"/>
     <SolidColorBrush x:Key="DangerTintBrush" Color="#FDEDEC"/>
     <SolidColorBrush x:Key="DangerTintBorderBrush" Color="#F5C6C0"/>
 
-    <!-- Elevation -->
-    <DropShadowEffect x:Key="CardShadow" Color="#000000" Direction="270" ShadowDepth="2" BlurRadius="16" Opacity="0.12"/>
+    <!-- Elevation & Shadows -->
+    <DropShadowEffect x:Key="CardShadow" Color="#000000" Direction="270" ShadowDepth="1.5" BlurRadius="12" Opacity="0.08"/>
+    <DropShadowEffect x:Key="CardShadowElevated" Color="#000000" Direction="270" ShadowDepth="3" BlurRadius="20" Opacity="0.12"/>
+    <DropShadowEffect x:Key="CardShadowSubtle" Color="#000000" Direction="270" ShadowDepth="1" BlurRadius="6" Opacity="0.05"/>
 
 </ResourceDictionary>

@@ -254,8 +254,10 @@ namespace ip
                 // only picking up the current theme at launch.
                 WindowBackdrop.WatchForThemeChange(this, () =>
                 {
-                    App.ApplyTheme(App.IsSystemDarkTheme());
+                    isDarkTheme = App.IsSystemDarkTheme();
+                    App.ApplyTheme(isDarkTheme);
                     WindowBackdrop.ApplyCaptionColor(this);
+                    Dispatcher.Invoke(UpdateThemeToggleIcon);
                 });
             };
         }
@@ -274,6 +276,7 @@ namespace ip
         #region Window state
 
         private bool closed;
+        private bool isDarkTheme;
 
         private readonly WindowViewModel? vm;
 
@@ -1029,6 +1032,27 @@ namespace ip
                     }
                 });
             }).Start();
+
+            // Theme toggle initialization
+            isDarkTheme = App.IsSystemDarkTheme();
+            UpdateThemeToggleIcon();
+        }
+
+        private void UpdateThemeToggleIcon()
+        {
+            if (txtThemeIcon != null)
+            {
+                txtThemeIcon.Text = isDarkTheme ? "\uE706" : "\uE708";
+                btnThemeToggle.ToolTip = isDarkTheme ? "Switch to Light Theme" : "Switch to Dark Theme";
+            }
+        }
+
+        private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            isDarkTheme = !isDarkTheme;
+            App.ApplyTheme(isDarkTheme);
+            WindowBackdrop.ApplyCaptionColor(this);
+            UpdateThemeToggleIcon();
         }
 
         #endregion

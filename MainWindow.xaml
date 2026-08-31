@@ -74,7 +74,7 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Network -->
-                                    <DataGridTemplateColumn Header="Network" Width="*" MinWidth="180">
+                                    <DataGridTemplateColumn Header="Network" Width="auto" MinWidth="180">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding name}" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding name}" />

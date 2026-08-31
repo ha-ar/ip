@@ -33,8 +33,9 @@
 
             <!-- Used for TextBlocks inside DataGrid cells -->
             <Style x:Key="DataGridTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-                <Setter Property="Margin" Value="10"/>
+                <Setter Property="Margin" Value="10,0"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
             </Style>
 
             <!-- =====================================================================
@@ -312,7 +313,7 @@
                 <Setter Property="HeadersVisibility" Value="Column"/>
                 <Setter Property="CanUserResizeRows" Value="False"/>
                 <Setter Property="CanUserReorderColumns" Value="False"/>
-                <Setter Property="RowHeight" Value="46"/>
+                <Setter Property="MinRowHeight" Value="44"/>
                 <Setter Property="FontSize" Value="13"/>
             </Style>
 

@@ -51,7 +51,7 @@
 
                                 <DataGrid.Columns>
                                     <!-- Select -->
-                                    <DataGridTemplateColumn Header="Select" Width="70">
+                                    <DataGridTemplateColumn Header="Select" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <!-- GroupName is scoped per-Window in WPF, so this must be distinct from the
@@ -73,15 +73,17 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <!-- Other columns -->
-                                                                        <DataGridTemplateColumn Header="Network">
+                                    <!-- Network -->
+                                    <DataGridTemplateColumn Header="Network" Width="*" MinWidth="180">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding name}" Style="{StaticResource DataGridTextBlockStyle}" />
+                                                <TextBlock Text="{Binding name}" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding name}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                                                        <DataGridTemplateColumn Header="Type" Width="90">
+
+                                    <!-- Type -->
+                                    <DataGridTemplateColumn Header="Type" Width="90">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding type}" Style="{StaticResource DataGridTextBlockStyle}" />
@@ -90,26 +92,28 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- IP -->
-                                    <DataGridTemplateColumn Header="IP">
+                                    <DataGridTemplateColumn Header="IP" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding ip}" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource DataGridTextBlockStyle}" />
-                                                    <Image Width="20" Height="20" Source="{Binding systemImage}" Visibility="{Binding systemImageVisibility}" ToolTip="{Binding systemName}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding ip}" VerticalAlignment="Center" Margin="0,0,6,0" Style="{StaticResource DataGridTextBlockStyle}" />
+                                                    <Image Width="20" Height="20" Source="{Binding systemImage}" Visibility="{Binding systemImageVisibility}" ToolTip="{Binding systemName}" VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <!-- Other columns -->
-                                                                        <DataGridTemplateColumn Header="Speed" Width="110">
+                                    <!-- Speed -->
+                                    <DataGridTemplateColumn Header="Speed" Width="100">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding speed}" Style="{StaticResource DataGridTextBlockStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                                                        <DataGridTemplateColumn Header="Up Time" Width="110">
+
+                                    <!-- Up Time -->
+                                    <DataGridTemplateColumn Header="Up Time" Width="100">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding uptime}" Style="{StaticResource DataGridTextBlockStyle}" />
@@ -316,7 +320,7 @@
 
                                 <DataGrid.Columns>
                                     <!-- Select -->
-                                    <DataGridTemplateColumn Header="Select" Width="70">
+                                    <DataGridTemplateColumn Header="Select" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <!-- Distinct GroupName from the Network Interface grid above - see the comment there. -->
@@ -336,28 +340,26 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <!-- System -->
-                                    <DataGridTemplateColumn Header="Image" Width="70">
+                                    <!-- Image -->
+                                    <DataGridTemplateColumn Header="Image" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border Padding="10" Background="Transparent">
-                                                    <Image Source="{Binding SystemImage}" Height="50" Width="50"/>
-                                                </Border>
+                                                <Image Source="{Binding SystemImage}" Height="36" Width="36" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
                                     <!-- System -->
-                                    <DataGridTemplateColumn Header="System">
+                                    <DataGridTemplateColumn Header="System" Width="*" MinWidth="220">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding System}" Style="{StaticResource DataGridTextBlockStyle}" />
+                                                <TextBlock Text="{Binding System}" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding System}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
                                     <!-- NIC IP -->
-                                    <DataGridTemplateColumn Header="NIC IP" Width="140">
+                                    <DataGridTemplateColumn Header="NIC IP" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding NicIP}" Style="{StaticResource DataGridTextBlockStyle}" />
@@ -366,7 +368,7 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Jumbo Frame -->
-                                    <DataGridTemplateColumn Header="Jumbo Frame" Width="130">
+                                    <DataGridTemplateColumn Header="Jumbo Frame" Width="110">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding JumboFrame}" Style="{StaticResource DataGridTextBlockStyle}" />
@@ -375,7 +377,7 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Speed -->
-                                    <DataGridTemplateColumn Header="Speed" Width="110">
+                                    <DataGridTemplateColumn Header="Speed" Width="90">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Speed}" Style="{StaticResource DataGridTextBlockStyle}" />
@@ -384,24 +386,13 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Device IP -->
-                                    <DataGridTemplateColumn Header="Device IP" Width="140">
+                                    <DataGridTemplateColumn Header="Device IP" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding DeviceIP}" Style="{StaticResource DataGridTextBlockStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-
-                                    <!-- Set To Interface -->
-                                    <!--
-                                        <DataGridTemplateColumn Header="Set To Interface">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="Set To Interface" Command="{Binding Path=DataContext.SetToInterfaceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Padding="10" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        -->
                                 </DataGrid.Columns>
 
                                 <!-- / Machine Type grid -->

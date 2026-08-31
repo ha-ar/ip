@@ -1,4 +1,4 @@
-﻿#pragma warning disable CA1416 // Validate platform compatibility
+#pragma warning disable CA1416 // Validate platform compatibility
 
 using CsvHelper;
 using ip.models;
@@ -236,6 +236,11 @@ namespace ip
             Title = $"IP Setting for AM.CO.ZA Machines, Version {Version.shortVersion}";
             vm = new WindowViewModel(this);
             DataContext = vm;
+            if (SkipLoginForTesting)
+            {
+                loggedIn = true;
+                vm.LoggedInTabVisibility = Visibility.Visible;
+            }
             Closed += (sender, e) => closed = true;
 
             // Windows 11 rounded window corners, and tinting the title bar to match the
@@ -287,7 +292,7 @@ namespace ip
         // TESTING ONLY - bypasses the WhatsApp OTP activation flow so the
         // Machine Type / Status tabs are reachable without a real phone
         // number. Set back to false before shipping.
-        private const bool SkipLoginForTesting = false;
+        private const bool SkipLoginForTesting = true;
 
         private static bool loggedIn;
 

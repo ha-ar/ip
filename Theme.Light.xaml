@@ -61,6 +61,10 @@
     <SolidColorBrush x:Key="WarningTextBrush" Color="#B45309"/>
     <SolidColorBrush x:Key="WarningTintBrush" Color="#FFFBEB"/>
     <SolidColorBrush x:Key="WarningTintBorderBrush" Color="#FDE68A"/>
+    <SolidColorBrush x:Key="OrangeBrush" Color="#EA580C"/>
+    <SolidColorBrush x:Key="OrangeTextBrush" Color="#C2410C"/>
+    <SolidColorBrush x:Key="OrangeTintBrush" Color="#FFF7ED"/>
+    <SolidColorBrush x:Key="OrangeTintBorderBrush" Color="#FFEDD5"/>
 
     <!-- Semantic: Danger / Error / Conflict -->
     <SolidColorBrush x:Key="DangerBrush" Color="#D32F2F"/>

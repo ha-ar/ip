@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ip"
-        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         mc:Ignorable="d"
         Title="AM.CO.ZA IP Setting Utility"
         Width="980"
@@ -73,583 +72,861 @@
                  Tab 1: Network Interface
                  ===================================================================== -->
             <TabItem Header="1. Network Interface">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,14,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <!-- 0: Section Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: NIC Table (Expands to fill remaining vertical space) -->
+                        <RowDefinition Height="*" />
+                        <!-- 2: Action & Notification Bar (Pinned to Bottom) -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                        <!-- Section Header -->
-                        <StackPanel Grid.Row="0" Margin="2,0,0,12">
-                            <TextBlock Text="All Wired Network Connections" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                            <TextBlock Text="Select the physical Ethernet card connected to your AM.CO.ZA machine." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                        </StackPanel>
+                    <!-- Section Header -->
+                    <StackPanel Grid.Row="0" Margin="2,0,0,10">
+                        <TextBlock Text="All Wired Network Connections" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Select the physical Ethernet card connected to your AM.CO.ZA machine." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                    </StackPanel>
 
-                        <!-- NIC DataGrid Card -->
-                        <Border Grid.Row="1" Style="{StaticResource GlassCardStyle}" Padding="6">
-                            <DataGrid Name="nicDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" SelectionUnit="FullRow" SelectionMode="Single" SelectionChanged="NICDataGrid_SelectionChanged" ColumnWidth="*" MaxHeight="360">
-                                <DataGrid.Columns>
-                                    <!-- Select -->
-                                    <DataGridTemplateColumn Header="Select" Width="60">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <RadioButton GroupName="SelectedNic" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <RadioButton.Style>
-                                                        <Style TargetType="RadioButton" BasedOn="{StaticResource ModernRadioButtonStyle}">
-                                                            <Setter Property="IsChecked" Value="False"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
-                                                                    <Setter Property="IsChecked" Value="True"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </RadioButton.Style>
-                                                </RadioButton>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                    <!-- NIC DataGrid Card -->
+                    <Border Grid.Row="1" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,10" Padding="6">
+                        <DataGrid Name="nicDataGrid"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  SelectionUnit="FullRow"
+                                  SelectionMode="Single"
+                                  SelectionChanged="NICDataGrid_SelectionChanged"
+                                  ColumnWidth="*"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                            <DataGrid.Columns>
+                                <!-- Select -->
+                                <DataGridTemplateColumn Header="Select" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="SelectedNic" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <RadioButton.Style>
+                                                    <Style TargetType="RadioButton" BasedOn="{StaticResource ModernRadioButtonStyle}">
+                                                        <Setter Property="IsChecked" Value="False"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                                                                <Setter Property="IsChecked" Value="True"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </RadioButton.Style>
+                                            </RadioButton>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Network Name -->
-                                    <DataGridTemplateColumn Header="Network Adapter" Width="*" MinWidth="200">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding name}" FontWeight="SemiBold" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding name}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Network Name -->
+                                <DataGridTemplateColumn Header="Network Adapter" Width="*" MinWidth="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding name}" FontWeight="SemiBold" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding name}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Type -->
-                                    <DataGridTemplateColumn Header="Type" Width="100">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Border Background="{DynamicResource BadgeBackgroundBrush}" CornerRadius="6" Padding="8,3" HorizontalAlignment="Left" Margin="10,0">
-                                                    <TextBlock Text="{Binding type}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource BadgeTextBrush}" HorizontalAlignment="Center"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Type -->
+                                <DataGridTemplateColumn Header="Type" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource BadgeBackgroundBrush}" CornerRadius="6" Padding="8,3" HorizontalAlignment="Left" Margin="10,0">
+                                                <TextBlock Text="{Binding type}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource BadgeTextBrush}" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- IP -->
-                                    <DataGridTemplateColumn Header="IP Address" Width="160">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                                                    <TextBlock Text="{Binding ip}" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource MonospaceTextBlockStyle}" />
-                                                    <Image Width="20" Height="20" Source="{Binding systemImage}" Visibility="{Binding systemImageVisibility}" ToolTip="{Binding systemName}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- IP -->
+                                <DataGridTemplateColumn Header="IP Address" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                <TextBlock Text="{Binding ip}" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource MonospaceTextBlockStyle}" />
+                                                <Image Width="20" Height="20" Source="{Binding systemImage}" Visibility="{Binding systemImageVisibility}" ToolTip="{Binding systemName}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Speed -->
-                                    <DataGridTemplateColumn Header="Speed" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding speed}" Style="{StaticResource DataGridTextBlockStyle}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Speed -->
+                                <DataGridTemplateColumn Header="Speed" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding speed}" Style="{StaticResource DataGridTextBlockStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Up Time -->
-                                    <DataGridTemplateColumn Header="Up Time" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding uptime}" Style="{StaticResource DataGridTextBlockStyle}" Foreground="{DynamicResource TextSecondaryBrush}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                <!-- Up Time -->
+                                <DataGridTemplateColumn Header="Up Time" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding uptime}" Style="{StaticResource DataGridTextBlockStyle}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Notification / Action InfoBars (Docked at Bottom) -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,0">
+                        <!-- Notification: Version -->
+                        <Border Name="ntfVersion" Style="{StaticResource TintCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
+                                <TextBlock Name="ntfVersionText" Grid.Column="1" VerticalAlignment="Center" FontSize="13">New version available. Please download from <Hyperlink NavigateUri="https://www.SetIP.co.za" RequestNavigate="Hyperlink_RequestNavigate">www.SetIP.co.za</Hyperlink></TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Download" Click="BtnDownload_Click" />
+                            </Grid>
                         </Border>
 
-                        <!-- Notification / Action InfoBars -->
-                        <StackPanel Grid.Row="2" Margin="0,6,0,0">
-                            <!-- Notification: Version -->
-                            <Border Name="ntfVersion" Style="{StaticResource TintCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
-                                    <TextBlock Name="ntfVersionText" Grid.Column="1" VerticalAlignment="Center" FontSize="13">New version available. Please download from <Hyperlink NavigateUri="https://www.SetIP.co.za" RequestNavigate="Hyperlink_RequestNavigate">www.SetIP.co.za</Hyperlink></TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Download" Click="BtnDownload_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Network Adapter -->
+                        <Border Name="ntfNetworkAdapter" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13">No network port detected. You can use a Generic USB 3.0 to Gigabit Ethernet Adapter.</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Buy Network Adapter" Click="BtnNetworkAdapter_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Network Adapter -->
-                            <Border Name="ntfNetworkAdapter" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13">No network port detected. You can use a Generic USB 3.0 to Gigabit Ethernet Adapter.</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Buy Network Adapter" Click="BtnNetworkAdapter_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Network Cable -->
+                        <Border Name="ntfNetworkCable" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13">No network cable is connected. Please connect a CAT6 cable to your machine's port.</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Buy Network Cable" Click="BtnNetworkCable_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Network Cable -->
-                            <Border Name="ntfNetworkCable" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13">No network cable is connected. Please connect a CAT6 cable to your machine's port.</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Buy Network Cable" Click="BtnNetworkCable_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Offline -->
+                        <Border Name="ntfOffline" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="No internet connection" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource DangerTextBrush}"/>
+                                    <TextBlock Text="Please connect this computer to the internet and click Try Again." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Style="{StaticResource OrangeButtonStyle}" Content="Try Again" Click="BtnTryAgain_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Offline -->
-                            <Border Name="ntfOffline" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="No internet connection" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource DangerTextBrush}"/>
-                                        <TextBlock Text="Please connect this computer to the internet and click Try Again." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                    <Button Grid.Column="2" Style="{StaticResource OrangeButtonStyle}" Content="Try Again" Click="BtnTryAgain_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Select, Then Next [1] -->
+                        <Border Name="ntfSelectThenNext1" Style="{StaticResource TintCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
+                                <TextBlock Name="ntfSelectThenNext1Text" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Please select the network interface connected to your AM.CO.ZA machine, then click "Next".</TextBlock>
+                                <Button Name="ntfSelectThenNext1Button" Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Next Step" Click="BtnNext1_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Select, Then Next [1] -->
-                            <Border Name="ntfSelectThenNext1" Style="{StaticResource TintCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
-                                    <TextBlock Name="ntfSelectThenNext1Text" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Please select the network interface connected to your AM.CO.ZA machine, then click "Next".</TextBlock>
-                                    <Button Name="ntfSelectThenNext1Button" Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Next Step" Click="BtnNext1_Click" />
+                        <!-- Notification: Login -->
+                        <Border Name="ntfLogin" Style="{StaticResource TintCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="6,0,10,0">
+                                    <TextBlock Text="Software Activation Required" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource AccentBrushDarker}"/>
+                                    <TextBlock Text="Please activate this software using the verification code sent to your WhatsApp." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Name="cbCountry1" Grid.Column="1" Margin="6" VerticalAlignment="Center" SelectedValuePath="dial_code">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock><Run Text="{Binding name}" /><Run Text=" (" /><Run Text="{Binding dial_code}" /><Run Text=")" /></TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Grid Grid.Column="2" Margin="6">
+                                    <TextBox x:Name="txtPhone1" Width="150" Height="34" VerticalContentAlignment="Center" />
+                                    <TextBlock Text="Phone number" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtPhone1, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
                                 </Grid>
-                            </Border>
+                                <Button Grid.Column="3" Margin="6" Style="{StaticResource BlueButtonStyle}" Content="Send Code" Click="BtnSend_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Login -->
-                            <Border Name="ntfLogin" Style="{StaticResource TintCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="6,0,10,0">
-                                        <TextBlock Text="Software Activation Required" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource AccentBrushDarker}"/>
-                                        <TextBlock Text="Please activate this software using the verification code sent to your WhatsApp." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                    <ComboBox Name="cbCountry1" Grid.Column="1" Margin="6" VerticalAlignment="Center" SelectedValuePath="dial_code">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock><Run Text="{Binding name}" /><Run Text=" (" /><Run Text="{Binding dial_code}" /><Run Text=")" /></TextBlock>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <Grid Grid.Column="2" Margin="6">
-                                        <TextBox x:Name="txtPhone1" Width="150" Height="34" VerticalContentAlignment="Center" />
-                                        <TextBlock Text="Phone number" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtPhone1, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                                    </Grid>
-                                    <Button Grid.Column="3" Margin="6" Style="{StaticResource BlueButtonStyle}" Content="Send Code" Click="BtnSend_Click" />
+                        <!-- Notification: OTP -->
+                        <Border Name="ntfOTP" Style="{StaticResource TintCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox Name="cbCountry2" Grid.Column="0" IsReadOnly="True" GotFocus="ChangePhoneNumber" VerticalAlignment="Center" Margin="6" SelectedValuePath="dial_code">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock><Run Text="{Binding name}" /><Run Text=" (" /><Run Text="{Binding dial_code}" /><Run Text=")" /></TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Grid Grid.Column="1" Margin="6">
+                                    <TextBox x:Name="txtPhone2" IsReadOnly="True" VerticalContentAlignment="Center" GotFocus="ChangePhoneNumber" Width="150" Height="34" />
+                                    <TextBlock Text="Phone number" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtPhone2, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
                                 </Grid>
-                            </Border>
-
-                            <!-- Notification: OTP -->
-                            <Border Name="ntfOTP" Style="{StaticResource TintCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Name="cbCountry2" Grid.Column="0" IsReadOnly="True" GotFocus="ChangePhoneNumber" VerticalAlignment="Center" Margin="6" SelectedValuePath="dial_code">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock><Run Text="{Binding name}" /><Run Text=" (" /><Run Text="{Binding dial_code}" /><Run Text=")" /></TextBlock>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <Grid Grid.Column="1" Margin="6">
-                                        <TextBox x:Name="txtPhone2" IsReadOnly="True" VerticalContentAlignment="Center" GotFocus="ChangePhoneNumber" Width="150" Height="34" />
-                                        <TextBlock Text="Phone number" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtPhone2, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                                    </Grid>
-                                    <Grid Grid.Column="2" Margin="6">
-                                        <TextBox x:Name="txtOTP" Width="150" Height="34" VerticalContentAlignment="Center" />
-                                        <TextBlock Text="Verification Code" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtOTP, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                                    </Grid>
-                                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6">
-                                        <Button Style="{StaticResource BlueButtonStyle}" Content="Confirm OTP" Click="BtnConfirm_Click" />
-                                        <Button Name="BtnResend" Style="{StaticResource OrangeButtonStyle}" Content="Resend" Click="BtnResend_Click" />
-                                    </StackPanel>
+                                <Grid Grid.Column="2" Margin="6">
+                                    <TextBox x:Name="txtOTP" Width="150" Height="34" VerticalContentAlignment="Center" />
+                                    <TextBlock Text="Verification Code" Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="{Binding Text, ElementName=txtOTP, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
                                 </Grid>
-                            </Border>
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6">
+                                    <Button Style="{StaticResource BlueButtonStyle}" Content="Confirm OTP" Click="BtnConfirm_Click" />
+                                    <Button Name="BtnResend" Style="{StaticResource OrangeButtonStyle}" Content="Resend" Click="BtnResend_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-                            <!-- Loading Spinner -->
-                            <local:LoadingSpinner x:Name="ntfLoadingSpinnerNic" Visibility="Collapsed" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
+                        <!-- Loading Spinner -->
+                        <local:LoadingSpinner x:Name="ntfLoadingSpinnerNic" Visibility="Collapsed" />
+                    </StackPanel>
+                </Grid>
             </TabItem>
 
             <!-- =====================================================================
                  Tab 2: Machine Type
                  ===================================================================== -->
             <TabItem Header="2. Machine Type" Name="tabMachineType" IsEnabled="False" Visibility="{Binding LoggedInTabVisibility}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,14,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <!-- 0: Section Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Machine Type Table (Expands to fill vertical space) -->
+                        <RowDefinition Height="*" />
+                        <!-- 2: Action Bar (Pinned to Bottom) -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                        <!-- Section Header -->
-                        <StackPanel Grid.Row="0" Margin="2,0,0,12">
-                            <TextBlock Text="Select Connected Machine Model" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                            <TextBlock Text="Select your CNC, laser cutter, or printer model to apply its target IP address and MTU configurations." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                        </StackPanel>
+                    <!-- Section Header -->
+                    <StackPanel Grid.Row="0" Margin="2,0,0,10">
+                        <TextBlock Text="Select Connected Machine Model" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Select your CNC, laser cutter, or printer model to apply its target IP address and MTU configurations." FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                    </StackPanel>
 
-                        <!-- Machine Type DataGrid Card -->
-                        <Border Grid.Row="1" Style="{StaticResource GlassCardStyle}" Padding="6">
-                            <DataGrid Name="machineTypeDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" SelectionUnit="FullRow" SelectionMode="Single" SelectionChanged="MachineTypeDataGrid_SelectionChanged" ColumnWidth="*" MaxHeight="360">
-                                <DataGrid.Columns>
-                                    <!-- Select -->
-                                    <DataGridTemplateColumn Header="Select" Width="60">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <RadioButton GroupName="SelectedMachineType" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <RadioButton.Style>
-                                                        <Style TargetType="RadioButton" BasedOn="{StaticResource ModernRadioButtonStyle}">
-                                                            <Setter Property="IsChecked" Value="False"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
-                                                                    <Setter Property="IsChecked" Value="True"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </RadioButton.Style>
-                                                </RadioButton>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                    <!-- Machine Type DataGrid Card -->
+                    <Border Grid.Row="1" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,10" Padding="6">
+                        <DataGrid Name="machineTypeDataGrid"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  SelectionUnit="FullRow"
+                                  SelectionMode="Single"
+                                  SelectionChanged="MachineTypeDataGrid_SelectionChanged"
+                                  ColumnWidth="*"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                            <DataGrid.Columns>
+                                <!-- Select -->
+                                <DataGridTemplateColumn Header="Select" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="SelectedMachineType" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <RadioButton.Style>
+                                                    <Style TargetType="RadioButton" BasedOn="{StaticResource ModernRadioButtonStyle}">
+                                                        <Setter Property="IsChecked" Value="False"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                                                                <Setter Property="IsChecked" Value="True"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </RadioButton.Style>
+                                            </RadioButton>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Image Preview -->
-                                    <DataGridTemplateColumn Header="Preview" Width="64">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <Image Source="{Binding SystemImage}" Height="30" Width="30" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Image Preview -->
+                                <DataGridTemplateColumn Header="Preview" Width="64">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Image Source="{Binding SystemImage}" Height="30" Width="30" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- System Name -->
-                                    <DataGridTemplateColumn Header="Machine / System" Width="*" MinWidth="220">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding System}" FontWeight="SemiBold" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding System}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- System Name -->
+                                <DataGridTemplateColumn Header="Machine / System" Width="*" MinWidth="220">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding System}" FontWeight="SemiBold" Style="{StaticResource DataGridTextBlockStyle}" ToolTip="{Binding System}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- NIC IP -->
-                                    <DataGridTemplateColumn Header="NIC IP" Width="125">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding NicIP}" Style="{StaticResource MonospaceTextBlockStyle}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- NIC IP -->
+                                <DataGridTemplateColumn Header="NIC IP" Width="125">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding NicIP}" Style="{StaticResource MonospaceTextBlockStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Jumbo Frame -->
-                                    <DataGridTemplateColumn Header="Jumbo Frame" Width="110">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding JumboFrame}" Style="{StaticResource DataGridTextBlockStyle}" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Jumbo Frame -->
+                                <DataGridTemplateColumn Header="Jumbo Frame" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding JumboFrame}" Style="{StaticResource DataGridTextBlockStyle}" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Speed -->
-                                    <DataGridTemplateColumn Header="Speed" Width="95">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Speed}" Style="{StaticResource DataGridTextBlockStyle}" HorizontalAlignment="Center" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                <!-- Speed -->
+                                <DataGridTemplateColumn Header="Speed" Width="95">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Speed}" Style="{StaticResource DataGridTextBlockStyle}" HorizontalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                    <!-- Device IP -->
-                                    <DataGridTemplateColumn Header="Device IP" Width="125">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding DeviceIP}" Style="{StaticResource MonospaceTextBlockStyle}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                <!-- Device IP -->
+                                <DataGridTemplateColumn Header="Device IP" Width="125">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DeviceIP}" Style="{StaticResource MonospaceTextBlockStyle}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Notification / Step 2 Action (Docked at Bottom) -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,0">
+                        <Border Name="ntfSelectThenNext2" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
+                                <TextBlock Name="ntfSelectThenNext2Text" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Please select your machine model, then click "Apply &amp; Test Connection".</TextBlock>
+                                <Button Name="ntfSelectThenNext2Button" Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Apply &amp; Test Connection" Click="BtnNext2_Click" />
+                            </Grid>
                         </Border>
 
-                        <!-- Notification / Step 2 Action -->
-                        <StackPanel Grid.Row="2" Margin="0,6,0,0">
-                            <Border Name="ntfSelectThenNext2" Style="{StaticResource GlassCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
-                                    <TextBlock Name="ntfSelectThenNext2Text" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Please select your machine model, then click "Apply &amp; Test Connection".</TextBlock>
-                                    <Button Name="ntfSelectThenNext2Button" Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Apply &amp; Test Connection" Click="BtnNext2_Click" />
-                                </Grid>
-                            </Border>
-
-                            <!-- Loading Spinner -->
-                            <local:LoadingSpinner x:Name="ntfLoadingSpinnerMachineType" Visibility="Collapsed" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
+                        <!-- Loading Spinner -->
+                        <local:LoadingSpinner x:Name="ntfLoadingSpinnerMachineType" Visibility="Collapsed" />
+                    </StackPanel>
+                </Grid>
             </TabItem>
 
             <!-- =====================================================================
                  Tab 3: Status & Diagnostics
                  ===================================================================== -->
             <TabItem Header="3. Status &amp; Diagnostics" Name="tabStatus" IsEnabled="False" Visibility="{Binding LoggedInTabVisibility}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,14,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <!-- 0: Hero Device Overview Card -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Live Diagnostics & Latency Health Card (Adapts to fill space) -->
+                        <RowDefinition Height="*" />
+                        <!-- 2: Action & Notification Bar (Pinned to Bottom) -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                        <!-- Status Overview Dashboard -->
-                        <StackPanel Grid.Row="0">
-                            <!-- Hero Device Card -->
-                            <Border Style="{StaticResource GlassCardStyle}" Padding="18">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
+                    <!-- Hero Device Card (Row 0) -->
+                    <Border Grid.Row="0" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,10" Padding="14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                                    <!-- Machine Image in Elevation Frame -->
-                                    <Border Grid.Column="0" Width="100" Height="100" CornerRadius="12" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" Effect="{DynamicResource CardShadowSubtle}" Margin="0,0,20,0">
-                                        <Image Width="80" Height="80" Source="{Binding SelectedMachineType.SystemImage}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                    </Border>
-
-                                    <!-- Right Content -->
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <!-- Machine Title -->
-                                        <TextBlock Text="{Binding SelectedMachineType.System}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12" />
-
-                                        <!-- Success State Grid -->
-                                        <StackPanel Name="SuccessStatus" Visibility="Collapsed">
-                                            <UniformGrid Columns="2" Margin="0,0,0,4">
-                                                <!-- Metric 1: Selected Adapter -->
-                                                <Border Style="{StaticResource StatCardStyle}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="NETWORK INTERFACE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
-                                                            <TextBlock Text="{Binding SelectedNIC.name}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding SelectedNIC.name}"/>
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- Metric 2: IP Address -->
-                                                <Border Style="{StaticResource StatCardStyle}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="ASSIGNED IP ADDRESS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
-                                                            <TextBlock Text="{Binding SelectedNIC.ip}" FontSize="14" FontWeight="Bold" FontFamily="Consolas, Cascadia Code" Foreground="{DynamicResource StatValueBrush}" Margin="0,3,0,0"/>
-                                                        </StackPanel>
-                                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Image Source="/img/yes.png" Width="22" Height="22" Visibility="{Binding ip_yes}" />
-                                                            <Image Source="/img/warning.png" Width="22" Height="22" Visibility="{Binding ip_warning}" />
-                                                            <Image Source="/img/no.png" Width="22" Height="22" Visibility="{Binding ip_no}" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- Metric 3: Speed -->
-                                                <Border Style="{StaticResource StatCardStyle}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="LINK SPEED" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
-                                                            <TextBlock Text="{Binding SelectedNIC.speed}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,3,0,0"/>
-                                                        </StackPanel>
-                                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Image Source="/img/yes.png" Width="22" Height="22" Visibility="{Binding speed_yes}" />
-                                                            <Image Source="/img/warning.png" Width="22" Height="22" Visibility="{Binding speed_warning}" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- Metric 4: Jumbo Frame -->
-                                                <Border Style="{StaticResource StatCardStyle}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0">
-                                                            <TextBlock Text="JUMBO FRAME (MTU)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
-                                                            <TextBlock Text="{Binding SelectedNIC.jumboFrame}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,3,0,0"/>
-                                                            <StackPanel Orientation="Horizontal" Visibility="{Binding jumbo_frame_maybe}" Margin="0,4,0,0">
-                                                                <Image Source="/img/maybe.png" Width="16" Height="16" Margin="0,0,4,0"/>
-                                                                <TextBlock Text="Configure in Device Manager" FontSize="11.5" Foreground="{DynamicResource WarningTextBrush}"/>
-                                                            </StackPanel>
-                                                            <StackPanel Orientation="Horizontal" Visibility="{Binding jumbo_frame_no}" Margin="0,4,0,0">
-                                                                <Image Source="/img/no.png" Width="16" Height="16" Margin="0,0,4,0"/>
-                                                                <TextBlock Text="Update Network Driver" FontSize="11.5" Foreground="{DynamicResource DangerTextBrush}"/>
-                                                            </StackPanel>
-                                                        </StackPanel>
-                                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Image Source="/img/yes.png" Width="22" Height="22" Visibility="{Binding jumbo_frame_yes}" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-                                            </UniformGrid>
-                                        </StackPanel>
-
-                                        <!-- Error State: IP Conflict -->
-                                        <StackPanel Name="ErrorIPConflict" Visibility="Collapsed" Margin="0,4,0,0">
-                                            <Border Background="{DynamicResource DangerBrush}" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
-                                                <TextBlock Text="IP Conflict Detected" FontSize="13" FontWeight="Bold" Foreground="White"/>
-                                            </Border>
-                                            <TextBlock Margin="0,8,0,0" FontSize="13" LineHeight="20">
-                                                <Run Text="{Binding SelectedMachineType.System}" FontWeight="SemiBold" /> requires IP <Run Text="{Binding SelectedMachineType.NicIP}" FontWeight="Bold" />.<LineBreak />
-                                                This IP is currently in use by <Run Text="{Binding SelectedNIC.name}" FontWeight="SemiBold" />.<LineBreak />
-                                                Click the Release button below to free this IP address automatically.
-                                            </TextBlock>
-                                        </StackPanel>
-
-                                        <!-- Error State: Failed to set IP -->
-                                        <StackPanel Name="ErrorFailedToSetIPAddress" Visibility="Collapsed" Margin="0,4,0,0">
-                                            <Border Background="{DynamicResource DangerBrush}" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
-                                                <TextBlock Text="Failed to Configure IP Address" FontSize="13" FontWeight="Bold" Foreground="White"/>
-                                            </Border>
-                                            <TextBlock Text="Unable to apply the required IP to this adapter. Please try again or run as Administrator." FontSize="13" Margin="0,8,0,0"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Grid>
+                            <!-- Machine Image in Elevation Frame -->
+                            <Border Grid.Column="0" Width="88" Height="88" CornerRadius="12" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" Effect="{DynamicResource CardShadowSubtle}" Margin="0,0,16,0">
+                                <Image Width="72" Height="72" Source="{Binding SelectedMachineType.SystemImage}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Border>
 
-                            <!-- Live Ping Latency Chart Card -->
-                            <Border Style="{StaticResource GlassCardStyle}" Margin="0,10,0,0" Padding="16">
+                            <!-- Right Content -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <!-- Machine Title -->
+                                <TextBlock Text="{Binding SelectedMachineType.System}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8" />
+
+                                <!-- Success State Grid -->
+                                <StackPanel Name="SuccessStatus" Visibility="Collapsed">
+                                    <UniformGrid Columns="2" Margin="0,0,0,0">
+                                        <!-- Metric 1: Selected Adapter -->
+                                        <Border Style="{StaticResource StatCardStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="NETWORK INTERFACE" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                                    <TextBlock Text="{Binding SelectedNIC.name}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding SelectedNIC.name}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Metric 2: IP Address -->
+                                        <Border Style="{StaticResource StatCardStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="ASSIGNED IP ADDRESS" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                                    <TextBlock Text="{Binding SelectedNIC.ip}" FontSize="13.5" FontWeight="Bold" FontFamily="Consolas, Cascadia Code" Foreground="{DynamicResource StatValueBrush}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Image Source="/img/yes.png" Width="20" Height="20" Visibility="{Binding ip_yes}" />
+                                                    <Image Source="/img/warning.png" Width="20" Height="20" Visibility="{Binding ip_warning}" />
+                                                    <Image Source="/img/no.png" Width="20" Height="20" Visibility="{Binding ip_no}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Metric 3: Speed -->
+                                        <Border Style="{StaticResource StatCardStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="LINK SPEED" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                                    <TextBlock Text="{Binding SelectedNIC.speed}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Image Source="/img/yes.png" Width="20" Height="20" Visibility="{Binding speed_yes}" />
+                                                    <Image Source="/img/warning.png" Width="20" Height="20" Visibility="{Binding speed_warning}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Metric 4: Jumbo Frame -->
+                                        <Border Style="{StaticResource StatCardStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="JUMBO FRAME (MTU)" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                                    <TextBlock Text="{Binding SelectedNIC.jumboFrame}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource StatValueBrush}" Margin="0,2,0,0"/>
+                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding jumbo_frame_maybe}" Margin="0,2,0,0">
+                                                        <Image Source="/img/maybe.png" Width="14" Height="14" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Configure in Device Manager" FontSize="11" Foreground="{DynamicResource WarningTextBrush}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding jumbo_frame_no}" Margin="0,2,0,0">
+                                                        <Image Source="/img/no.png" Width="14" Height="14" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Update Network Driver" FontSize="11" Foreground="{DynamicResource DangerTextBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Image Source="/img/yes.png" Width="20" Height="20" Visibility="{Binding jumbo_frame_yes}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </UniformGrid>
+                                </StackPanel>
+
+                                <!-- Error State: IP Conflict -->
+                                <StackPanel Name="ErrorIPConflict" Visibility="Collapsed" Margin="0,4,0,0">
+                                    <Border Background="{DynamicResource DangerBrush}" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
+                                        <TextBlock Text="IP Conflict Detected" FontSize="13" FontWeight="Bold" Foreground="White"/>
+                                    </Border>
+                                    <TextBlock Margin="0,8,0,0" FontSize="13" LineHeight="20">
+                                        <Run Text="{Binding SelectedMachineType.System}" FontWeight="SemiBold" /> requires IP <Run Text="{Binding SelectedMachineType.NicIP}" FontWeight="Bold" />.<LineBreak />
+                                        This IP is currently in use by <Run Text="{Binding SelectedNIC.name}" FontWeight="SemiBold" />.<LineBreak />
+                                        Click the Release button below to free this IP address automatically.
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Error State: Failed to set IP -->
+                                <StackPanel Name="ErrorFailedToSetIPAddress" Visibility="Collapsed" Margin="0,4,0,0">
+                                    <Border Background="{DynamicResource DangerBrush}" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
+                                        <TextBlock Text="Failed to Configure IP Address" FontSize="13" FontWeight="Bold" Foreground="White"/>
+                                    </Border>
+                                    <TextBlock Text="Unable to apply the required IP to this adapter. Please try again or run as Administrator." FontSize="13" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Live Diagnostics & Ping Health Card (Row 1 - Expands and adapts to available height) -->
+                    <Border Grid.Row="1" Name="PingDiagnosticsCard" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,10" Padding="14,12" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <!-- Header -->
+                                <RowDefinition Height="Auto" />
+                                <!-- Hero Status & Telemetry Grid -->
+                                <RowDefinition Height="Auto" />
+                                <!-- Visual Latency Meter Scale -->
+                                <RowDefinition Height="Auto" />
+                                <!-- Live Packet Activity Feed -->
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- 1. Diagnostic Card Header -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="8" Height="8" CornerRadius="4" Background="{Binding PingStatusBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Real-Time Connection Diagnostics" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <Border Background="{DynamicResource BadgeBackgroundBrush}" CornerRadius="6" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="1 Ping / Sec" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="Target Machine: " FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PingTargetIP}" FontSize="12.5" FontWeight="Bold" FontFamily="Consolas, Cascadia Code" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 2. Hero Status & Telemetry Grid -->
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <!-- Left: Live Hero Speed Badge Card -->
+                                    <ColumnDefinition Width="1.35*" />
+                                    <!-- Right: Telemetry Quick Metrics -->
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Hero Badge Card -->
+                                <Border Grid.Column="0" Background="{Binding PingStatusBgBrush}" BorderBrush="{Binding PingStatusBorderBrush}" BorderThickness="1.5" CornerRadius="10" Padding="14,10" Margin="0,0,6,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <!-- Status Pill -->
+                                            <Border Background="{Binding PingStatusBrush}" CornerRadius="6" Padding="8,3" HorizontalAlignment="Left" Margin="0,0,0,4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding PingStatusIcon}" FontWeight="Bold" FontSize="11" Foreground="White" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="{Binding PingStatusTitle}" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Subtitle explanation -->
+                                            <TextBlock Text="{Binding PingStatusSubtitle}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Large Numeric Latency Readout -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,4,0">
+                                            <TextBlock Text="{Binding CurrentPingText}" FontSize="26" FontWeight="Bold" FontFamily="Consolas, Cascadia Code, Segoe UI" Foreground="{Binding PingStatusBrush}" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="Roundtrip Latency" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Right" Margin="0,-2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Telemetry Stats Card -->
+                                <Border Grid.Column="1" Style="{StaticResource StatCardStyle}" Margin="6,0,0,0" Padding="10,8">
+                                    <UniformGrid Columns="2" Rows="2">
+                                        <StackPanel Margin="4,2">
+                                            <TextBlock Text="PACKET SUCCESS" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                            <TextBlock Text="{Binding PingSuccessRate}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,1,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="4,2">
+                                            <TextBlock Text="AVG LATENCY" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                            <TextBlock Text="{Binding PingAvgLatency}" FontSize="13" FontWeight="Bold" FontFamily="Consolas, Cascadia Code" Foreground="{DynamicResource StatValueBrush}" Margin="0,1,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="4,2">
+                                            <TextBlock Text="PACKET LOSS" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                            <TextBlock Text="{Binding PingLossSummary}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="4,2">
+                                            <TextBlock Text="MIN / MAX PING" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                            <TextBlock Text="{Binding PingMinMax}" FontSize="11.5" FontWeight="SemiBold" FontFamily="Consolas, Cascadia Code" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                </Border>
+                            </Grid>
+
+                            <!-- 3. Visual Latency Tier Scale (6 Tiers) -->
+                            <Border Grid.Row="2" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,0,8">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <!-- Chart Header -->
-                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                    <!-- Title -->
+                                    <TextBlock Grid.Row="0" Text="LATENCY RATING SCALE &amp; CLASSIFICATION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}" Margin="2,0,0,4"/>
+
+                                    <!-- 6 Tiers Grid -->
+                                    <UniformGrid Grid.Row="1" Columns="6">
+                                        <!-- Tier 0: 0ms Super Fast -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier0Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource SuccessTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="0 ms" FontWeight="Bold" FontSize="11.5" FontFamily="Consolas, Cascadia Code" HorizontalAlignment="Center" Foreground="{DynamicResource SuccessBrush}"/>
+                                                <TextBlock Text="Super Fast" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Tier 1: <= 2ms Fast -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier1Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource SuccessTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="≤ 2 ms" FontWeight="Bold" FontSize="11.5" FontFamily="Consolas, Cascadia Code" HorizontalAlignment="Center" Foreground="{DynamicResource SuccessBrush}"/>
+                                                <TextBlock Text="Fast" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Tier 2: <= 5ms OK -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier2Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource WarningTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="≤ 5 ms" FontWeight="Bold" FontSize="11.5" FontFamily="Consolas, Cascadia Code" HorizontalAlignment="Center" Foreground="{DynamicResource WarningBrush}"/>
+                                                <TextBlock Text="OK" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Tier 3: <= 10ms Slow -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier3Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource OrangeTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource OrangeBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="≤ 10 ms" FontWeight="Bold" FontSize="11.5" FontFamily="Consolas, Cascadia Code" HorizontalAlignment="Center" Foreground="{DynamicResource OrangeBrush}"/>
+                                                <TextBlock Text="Slow" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Tier 4: > 10ms Super Slow -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier4Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource DangerTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="> 10 ms" FontWeight="Bold" FontSize="11.5" FontFamily="Consolas, Cascadia Code" HorizontalAlignment="Center" Foreground="{DynamicResource DangerBrush}"/>
+                                                <TextBlock Text="Super Slow" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Tier 5: Timeout -->
+                                        <Border Margin="2" Padding="4,3" CornerRadius="6" BorderThickness="1.5">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTier5Active}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource DangerTintBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="✕" FontWeight="Bold" FontSize="11.5" HorizontalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}"/>
+                                                <TextBlock Text="Timeout" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- 4. Live Packet Pulse Stream (History & Stability) -->
+                            <Border Grid.Row="3" Background="{DynamicResource CardBackgroundElevatedBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Header -->
+                                    <Grid Grid.Row="0" Margin="2,0,2,4">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource SuccessBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Live Device Latency &amp; Packet Response" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="LIVE PACKET PULSE STREAM" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatLabelBrush}"/>
+                                            <TextBlock Text=" (Recent ping responses)" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Text="Real-Time Ping (ms)" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding PingQualityRating}" HorizontalAlignment="Right" FontSize="11" FontWeight="SemiBold" Foreground="{Binding PingStatusBrush}"/>
                                     </Grid>
 
-                                    <!-- Live Chart -->
-                                    <lvc:CartesianChart Grid.Row="1" Name="PingChart" Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" Height="190" Visibility="Collapsed" />
+                                    <!-- Chips / Stream -->
+                                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PingHistory}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="38" Height="40" Margin="2,0" CornerRadius="6" Background="{Binding StatusBgBrush}" BorderBrush="{Binding StatusBrush}" BorderThickness="1.5" ToolTip="{Binding TooltipText}" SnapsToDevicePixels="True">
+                                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                            <TextBlock Text="{Binding LatencyText}" FontSize="10" FontWeight="Bold" FontFamily="Consolas, Cascadia Code" Foreground="{Binding StatusBrush}" HorizontalAlignment="Center"/>
+                                                            <Ellipse Width="4.5" Height="4.5" Fill="{Binding StatusBrush}" Margin="0,3,0,0" HorizontalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
                                 </Grid>
                             </Border>
-                        </StackPanel>
+                        </Grid>
+                    </Border>
 
-                        <!-- Notification InfoBars -->
-                        <StackPanel Grid.Row="1" Margin="0,6,0,0">
-                            <!-- Notification: Ping Status -->
-                            <Border Name="ntfPingStatus" Style="{StaticResource GlassCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
-                                    <TextBlock Name="txtPingStatus" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Ping Status: Active</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Close Status" Click="BtnClosePingStatus_Click" />
-                                </Grid>
-                            </Border>
+                    <!-- Notification InfoBars (Docked at Bottom) -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,0">
+                        <!-- Notification: Ping Status -->
+                        <Border Name="ntfPingStatus" Style="{StaticResource GlassCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource InfoNotificationIconStyle}" />
+                                <TextBlock Name="txtPingStatus" Grid.Column="1" VerticalAlignment="Center" FontSize="13">Ping Status: Active</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource BlueButtonStyle}" Content="Close Status" Click="BtnClosePingStatus_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: IP Conflict -->
-                            <Border Name="ntfIpConflict" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">IP address conflict detected. Click Release to free this IP from the conflicting network interface.</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Release IP" Click="BtnRelease_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: IP Conflict -->
+                        <Border Name="ntfIpConflict" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">IP address conflict detected. Click Release to free this IP from the conflicting network interface.</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Release IP" Click="BtnRelease_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Failed to set IP address -->
-                            <Border Name="ntfFailedToSetIPAddress" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">Failed to set up the IP address. Please try again.</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Try Again" Click="BtnRetrySetIP_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Failed to set IP address -->
+                        <Border Name="ntfFailedToSetIPAddress" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">Failed to set up the IP address. Please try again.</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Try Again" Click="BtnRetrySetIP_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Notification: Failed to set IP address again -->
-                            <Border Name="ntfFailedToSetIPAddressAgain" Style="{StaticResource DangerCardStyle}" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">Failed to set up IP again. Please reinstall the network card driver and restart.</TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Delete &amp; Reboot" Click="BtnDeleteAndReboot_Click" />
-                                </Grid>
-                            </Border>
+                        <!-- Notification: Failed to set IP address again -->
+                        <Border Name="ntfFailedToSetIPAddressAgain" Style="{StaticResource DangerCardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource DangerNotificationIconStyle}" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="Bold" FontSize="13">Failed to set up IP again. Please reinstall the network card driver and restart.</TextBlock>
+                                <Button Grid.Column="2" Style="{StaticResource RoundedRedButtonStyle}" Content="Delete &amp; Reboot" Click="BtnDeleteAndReboot_Click" />
+                            </Grid>
+                        </Border>
 
-                            <!-- Loading Spinner -->
-                            <local:LoadingSpinner x:Name="ntfLoadingSpinnerStatus" Visibility="Collapsed" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
+                        <!-- Loading Spinner -->
+                        <local:LoadingSpinner x:Name="ntfLoadingSpinnerStatus" Visibility="Collapsed" />
+                    </StackPanel>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

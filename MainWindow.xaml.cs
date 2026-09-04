@@ -81,12 +81,10 @@ namespace ip
                 get => _selectedMachineType;
                 set
                 {
-                    // Guard against a null incoming value (e.g. the DataGrid selection
-                    // being cleared) - the previous code dereferenced value.System
-                    // unconditionally and threw a NullReferenceException here.
                     if (!(_selectedMachineType?.System?.Equals(value?.System) ?? false))
-                        _pingValues.Clear();
-                    InitChart();
+                    {
+                        ResetDiagnostics(value?.DeviceIP ?? "");
+                    }
                     Set(ref _selectedMachineType, value, nameof(SelectedMachineType));
                 }
             }
@@ -165,61 +163,350 @@ namespace ip
 
             #endregion
 
-            #region Ping Chart
+            #region Live Network Diagnostics
 
-            private readonly ObservableCollection<double> _pingValues = [];
-            public ISeries[] Series { get; set; }
-            public Axis[] XAxes { get; set; }
-            public Axis[] YAxes { get; set; }
-
-            public void AddPing(double ping)
+            private string _currentPingText = "—";
+            public string CurrentPingText
             {
-                lock (_pingValues)
-                {
-                    _pingValues.Add(ping);
-                    if (_pingValues.Count > 30)
-                        _pingValues.RemoveAt(0);
-                }
-                InitChart();
+                get => _currentPingText;
+                set => Set(ref _currentPingText, value, nameof(CurrentPingText));
             }
 
-            private void InitChart()
+            private string _pingStatusTitle = "TESTING CONNECTION...";
+            public string PingStatusTitle
             {
-                // Main ping line - deep blue so it reads clearly against the
-                // app's yellow accent (used for the warning threshold below)
-                var pingSeries = new LineSeries<double>
+                get => _pingStatusTitle;
+                set => Set(ref _pingStatusTitle, value, nameof(PingStatusTitle));
+            }
+
+            private string _pingStatusSubtitle = "Sending initial ping request to machine...";
+            public string PingStatusSubtitle
+            {
+                get => _pingStatusSubtitle;
+                set => Set(ref _pingStatusSubtitle, value, nameof(PingStatusSubtitle));
+            }
+
+            private string _pingStatusIcon = "⚡";
+            public string PingStatusIcon
+            {
+                get => _pingStatusIcon;
+                set => Set(ref _pingStatusIcon, value, nameof(PingStatusIcon));
+            }
+
+            private Brush _pingStatusBrush = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
+            public Brush PingStatusBrush
+            {
+                get => _pingStatusBrush;
+                set => Set(ref _pingStatusBrush, value, nameof(PingStatusBrush));
+            }
+
+            private Brush _pingStatusBgBrush = new SolidColorBrush(Color.FromArgb(0x22, 0x10, 0xB9, 0x81));
+            public Brush PingStatusBgBrush
+            {
+                get => _pingStatusBgBrush;
+                set => Set(ref _pingStatusBgBrush, value, nameof(PingStatusBgBrush));
+            }
+
+            private Brush _pingStatusBorderBrush = new SolidColorBrush(Color.FromArgb(0x50, 0x10, 0xB9, 0x81));
+            public Brush PingStatusBorderBrush
+            {
+                get => _pingStatusBorderBrush;
+                set => Set(ref _pingStatusBorderBrush, value, nameof(PingStatusBorderBrush));
+            }
+
+            private string _pingTargetIP = "—";
+            public string PingTargetIP
+            {
+                get => _pingTargetIP;
+                set => Set(ref _pingTargetIP, value, nameof(PingTargetIP));
+            }
+
+            private string _pingSuccessRate = "—";
+            public string PingSuccessRate
+            {
+                get => _pingSuccessRate;
+                set => Set(ref _pingSuccessRate, value, nameof(PingSuccessRate));
+            }
+
+            private string _pingAvgLatency = "—";
+            public string PingAvgLatency
+            {
+                get => _pingAvgLatency;
+                set => Set(ref _pingAvgLatency, value, nameof(PingAvgLatency));
+            }
+
+            private string _pingMinMax = "—";
+            public string PingMinMax
+            {
+                get => _pingMinMax;
+                set => Set(ref _pingMinMax, value, nameof(PingMinMax));
+            }
+
+            private string _pingLossSummary = "0% Loss";
+            public string PingLossSummary
+            {
+                get => _pingLossSummary;
+                set => Set(ref _pingLossSummary, value, nameof(PingLossSummary));
+            }
+
+            private string _pingQualityRating = "Measuring...";
+            public string PingQualityRating
+            {
+                get => _pingQualityRating;
+                set => Set(ref _pingQualityRating, value, nameof(PingQualityRating));
+            }
+
+            private bool _isTier0Active; // 0 ms (Super Fast)
+            public bool IsTier0Active
+            {
+                get => _isTier0Active;
+                set => Set(ref _isTier0Active, value, nameof(IsTier0Active));
+            }
+
+            private bool _isTier1Active; // <= 2 ms (Fast)
+            public bool IsTier1Active
+            {
+                get => _isTier1Active;
+                set => Set(ref _isTier1Active, value, nameof(IsTier1Active));
+            }
+
+            private bool _isTier2Active; // <= 5 ms (OK)
+            public bool IsTier2Active
+            {
+                get => _isTier2Active;
+                set => Set(ref _isTier2Active, value, nameof(IsTier2Active));
+            }
+
+            private bool _isTier3Active; // <= 10 ms (Slow)
+            public bool IsTier3Active
+            {
+                get => _isTier3Active;
+                set => Set(ref _isTier3Active, value, nameof(IsTier3Active));
+            }
+
+            private bool _isTier4Active; // > 10 ms (Super Slow)
+            public bool IsTier4Active
+            {
+                get => _isTier4Active;
+                set => Set(ref _isTier4Active, value, nameof(IsTier4Active));
+            }
+
+            private bool _isTier5Active; // Timeout
+            public bool IsTier5Active
+            {
+                get => _isTier5Active;
+                set => Set(ref _isTier5Active, value, nameof(IsTier5Active));
+            }
+
+            private int _packetsSent = 0;
+            private int _packetsReceived = 0;
+            private int _packetsLost = 0;
+            private readonly List<long> _recentLatencies = new();
+            private string _currentTargetIp = "";
+
+            public ObservableCollection<PingRecordItem> PingHistory { get; } = new();
+
+            public void ResetDiagnostics(string targetIp)
+            {
+                _currentTargetIp = targetIp;
+                _packetsSent = 0;
+                _packetsReceived = 0;
+                _packetsLost = 0;
+                _recentLatencies.Clear();
+                PingHistory.Clear();
+                PingTargetIP = string.IsNullOrWhiteSpace(targetIp) ? "—" : targetIp;
+                CurrentPingText = "—";
+                PingStatusTitle = "TESTING CONNECTION...";
+                PingStatusSubtitle = $"Pinging {targetIp} once per second...";
+                PingSuccessRate = "—";
+                PingAvgLatency = "—";
+                PingMinMax = "—";
+                PingLossSummary = "0% Loss";
+                PingQualityRating = "Measuring...";
+                IsTier0Active = IsTier1Active = IsTier2Active = IsTier3Active = IsTier4Active = IsTier5Active = false;
+            }
+
+            public void RecordPing(long pingMs, bool isSuccess, string targetIp)
+            {
+                if (_currentTargetIp != targetIp)
                 {
-                    Values = _pingValues,
-                    Stroke = new SolidColorPaint(new SKColor(0x0F, 0x6C, 0xBD)) { StrokeThickness = 2 },
-                    Fill = new SolidColorPaint(new SKColor(0x0F, 0x6C, 0xBD, 30)),
-                    GeometrySize = 0,
-                    AnimationsSpeed = TimeSpan.Zero // disable animation
+                    _currentTargetIp = targetIp;
+                    _packetsSent = 0;
+                    _packetsReceived = 0;
+                    _packetsLost = 0;
+                    _recentLatencies.Clear();
+                    PingHistory.Clear();
+                }
+
+                PingTargetIP = targetIp;
+                _packetsSent++;
+
+                if (isSuccess && pingMs >= 0)
+                {
+                    _packetsReceived++;
+                    _recentLatencies.Add(pingMs);
+                    if (_recentLatencies.Count > 60)
+                        _recentLatencies.RemoveAt(0);
+                }
+                else
+                {
+                    _packetsLost++;
+                }
+
+                double lossPercent = _packetsSent > 0 ? (_packetsLost * 100.0 / _packetsSent) : 0;
+                double successPercent = _packetsSent > 0 ? (_packetsReceived * 100.0 / _packetsSent) : 0;
+                PingSuccessRate = $"{successPercent:0.#}%";
+                PingLossSummary = $"{lossPercent:0.#}% Loss ({_packetsLost}/{_packetsSent} pkts)";
+
+                if (_recentLatencies.Count > 0)
+                {
+                    double avg = _recentLatencies.Average();
+                    long min = _recentLatencies.Min();
+                    long max = _recentLatencies.Max();
+                    PingAvgLatency = avg < 1.0 ? "< 1 ms" : $"{avg:0.1} ms";
+                    PingMinMax = $"{min} ms / {max} ms";
+                }
+                else
+                {
+                    PingAvgLatency = "—";
+                    PingMinMax = "—";
+                }
+
+                // Evaluate Latency Tier:
+                // Tier 0: 0 ms -> Super Fast (Instant direct local link)
+                // Tier 1: <= 2 ms -> Fast
+                // Tier 2: <= 5 ms -> OK
+                // Tier 3: <= 10 ms -> Slow
+                // Tier 4: > 10 ms -> Super Slow
+                // Tier 5: Timeout / Failed
+                int tier;
+                string title;
+                string subtitle;
+                string pingDisplay;
+                string icon;
+                Color statusColor;
+                Color bgColor;
+                Color borderColor;
+                string tierName;
+
+                if (!isSuccess || pingMs < 0)
+                {
+                    tier = 5;
+                    tierName = "Timeout";
+                    title = "TIMEOUT";
+                    subtitle = "No response from machine IP • Verify machine power & network cable";
+                    pingDisplay = "Timeout";
+                    icon = "✕";
+                    statusColor = Color.FromRgb(0xEF, 0x44, 0x44);
+                    bgColor = Color.FromArgb(0x25, 0xEF, 0x44, 0x44);
+                    borderColor = Color.FromArgb(0x60, 0xEF, 0x44, 0x44);
+                    PingQualityRating = "Disconnected / Timeout";
+                }
+                else if (pingMs == 0)
+                {
+                    tier = 0;
+                    tierName = "Super Fast";
+                    title = "SUPER FAST";
+                    subtitle = "Direct Ethernet connection • Zero packet delay (< 1 ms latency)";
+                    pingDisplay = "< 1 ms";
+                    icon = "⚡";
+                    statusColor = Color.FromRgb(0x10, 0xB9, 0x81);
+                    bgColor = Color.FromArgb(0x25, 0x10, 0xB9, 0x81);
+                    borderColor = Color.FromArgb(0x60, 0x10, 0xB9, 0x81);
+                    PingQualityRating = "100% Optimal (Direct Link)";
+                }
+                else if (pingMs <= 2)
+                {
+                    tier = 1;
+                    tierName = "Fast";
+                    title = "FAST";
+                    subtitle = "High-speed local connection • Excellent responsiveness";
+                    pingDisplay = $"{pingMs} ms";
+                    icon = "●";
+                    statusColor = Color.FromRgb(0x22, 0xC5, 0x5E);
+                    bgColor = Color.FromArgb(0x25, 0x22, 0xC5, 0x5E);
+                    borderColor = Color.FromArgb(0x60, 0x22, 0xC5, 0x5E);
+                    PingQualityRating = "Excellent Response (≤ 2 ms)";
+                }
+                else if (pingMs <= 5)
+                {
+                    tier = 2;
+                    tierName = "OK";
+                    title = "OK";
+                    subtitle = "Normal response time • Stable local network connection";
+                    pingDisplay = $"{pingMs} ms";
+                    icon = "●";
+                    statusColor = Color.FromRgb(0xF5, 0x9E, 0x0B);
+                    bgColor = Color.FromArgb(0x25, 0xF5, 0x9E, 0x0B);
+                    borderColor = Color.FromArgb(0x60, 0xF5, 0x9E, 0x0B);
+                    PingQualityRating = "Good / Normal (≤ 5 ms)";
+                }
+                else if (pingMs <= 10)
+                {
+                    tier = 3;
+                    tierName = "Slow";
+                    title = "SLOW";
+                    subtitle = "Elevated latency • Possible network switch congestion";
+                    pingDisplay = $"{pingMs} ms";
+                    icon = "▲";
+                    statusColor = Color.FromRgb(0xF9, 0x73, 0x16);
+                    bgColor = Color.FromArgb(0x25, 0xF9, 0x73, 0x16);
+                    borderColor = Color.FromArgb(0x60, 0xF9, 0x73, 0x16);
+                    PingQualityRating = "Fair / High Latency (≤ 10 ms)";
+                }
+                else
+                {
+                    tier = 4;
+                    tierName = "Super Slow";
+                    title = "SUPER SLOW";
+                    subtitle = "High network latency (> 10 ms) • Inspect network adapter and cable quality";
+                    pingDisplay = $"{pingMs} ms";
+                    icon = "⚠";
+                    statusColor = Color.FromRgb(0xEF, 0x44, 0x44);
+                    bgColor = Color.FromArgb(0x25, 0xEF, 0x44, 0x44);
+                    borderColor = Color.FromArgb(0x60, 0xEF, 0x44, 0x44);
+                    PingQualityRating = "Poor / Degraded Link (> 10 ms)";
+                }
+
+                CurrentPingText = pingDisplay;
+                PingStatusTitle = title;
+                PingStatusSubtitle = subtitle;
+                PingStatusIcon = icon;
+
+                var fgBrush = new SolidColorBrush(statusColor);
+                fgBrush.Freeze();
+                PingStatusBrush = fgBrush;
+
+                var bgBrush = new SolidColorBrush(bgColor);
+                bgBrush.Freeze();
+                PingStatusBgBrush = bgBrush;
+
+                var bdrBrush = new SolidColorBrush(borderColor);
+                bdrBrush.Freeze();
+                PingStatusBorderBrush = bdrBrush;
+
+                IsTier0Active = (tier == 0);
+                IsTier1Active = (tier == 1);
+                IsTier2Active = (tier == 2);
+                IsTier3Active = (tier == 3);
+                IsTier4Active = (tier == 4);
+                IsTier5Active = (tier == 5);
+
+                var historyItem = new PingRecordItem
+                {
+                    PingMs = isSuccess ? pingMs : -1,
+                    LatencyText = isSuccess ? (pingMs == 0 ? "<1ms" : $"{pingMs}ms") : "Timeout",
+                    Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                    StatusBrush = fgBrush,
+                    StatusBgBrush = bgBrush,
+                    TierName = tierName,
+                    IsTimeout = !isSuccess || pingMs < 0,
+                    TooltipText = $"{DateTime.Now:HH:mm:ss} - {(isSuccess ? $"{pingMs} ms" : "Timeout")} ({tierName})"
                 };
 
-                // Constant threshold lines
-                var warningLine = new LineSeries<double>
-                {
-                    Values = [.. new double[30].Select(_ => 50)],
-                    Stroke = new SolidColorPaint(new SKColor(0xE0, 0xA8, 0x00)) { StrokeThickness = 2 },
-                    Fill = null,
-                    GeometrySize = 0,
-                    AnimationsSpeed = TimeSpan.Zero // disable animation
-                };
-
-                var criticalLine = new LineSeries<double>
-                {
-                    Values = [.. new double[30].Select(_ => 100)],
-                    Stroke = new SolidColorPaint(new SKColor(0xC4, 0x2B, 0x1C)) { StrokeThickness = 2 },
-                    Fill = null,
-                    GeometrySize = 0,
-                    AnimationsSpeed = TimeSpan.Zero // disable animation
-                };
-
-                Series = [pingSeries, warningLine, criticalLine];
-                XAxes = [new Axis { Name = "Samples" }];
-                YAxes = [new Axis { Name = "Ping (ms)" }];
-
-                OnPropertyChanged(nameof(Series));
+                PingHistory.Add(historyItem);
+                if (PingHistory.Count > 28)
+                    PingHistory.RemoveAt(0);
             }
 
             #endregion
@@ -655,23 +942,30 @@ namespace ip
             else if (lastSetIpTime < UnixTimestamp - 5)
                 Decrease(ref Notifications.loadingSpinnerStatus);
 
-            // Update Ping Chart
+            // Update Ping Diagnostics
             if (selectedNIC != null && selectedMachineType != null && !string.IsNullOrWhiteSpace(selectedMachineType?.DeviceIP?.Replace("-", "")))
             {
-                long ping = 0;
+                long ping = -1;
+                bool isSuccess = false;
                 try
                 {
                     var reply = new Ping().SendPingAsync(selectedMachineType.DeviceIP, 2000).Result;
                     devicePingRoundtripTime = reply.RoundtripTime;
                     if (reply.Status == IPStatus.Success)
+                    {
                         ping = reply.RoundtripTime;
+                        isSuccess = true;
+                    }
                 }
                 catch (Exception ex)
                 {
                     Console.Error.WriteLine(ex.Message);
                 }
-                Dispatcher.Invoke(() => RefreshNotifications());
-                vm?.AddPing(ping);
+                Dispatcher.Invoke(() =>
+                {
+                    RefreshNotifications();
+                    vm?.RecordPing(ping, isSuccess, selectedMachineType.DeviceIP);
+                });
             }
 
             Dispatcher.Invoke(() =>
@@ -1354,7 +1648,7 @@ namespace ip
         {
             pingStatusClosed = false;
             SuccessStatus.Visibility = showSuccess ? Visibility.Visible : Visibility.Collapsed;
-            PingChart.Visibility = showSuccess ? Visibility.Visible : Visibility.Collapsed;
+            PingDiagnosticsCard.Visibility = showSuccess ? Visibility.Visible : Visibility.Collapsed;
             ErrorIPConflict.Visibility = Visibility.Collapsed;
             ErrorFailedToSetIPAddress.Visibility = Visibility.Collapsed;
             Notifications.ipConflict = false;
@@ -1373,7 +1667,7 @@ namespace ip
             ErrorIPConflict.Visibility = Visibility.Collapsed;
             ErrorFailedToSetIPAddress.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
             SuccessStatus.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
-            PingChart.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+            PingDiagnosticsCard.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
             Notifications.failedToSetIpAddress = show;
             Notifications.pingStatus = false;
             RefreshNotifications();
@@ -1384,7 +1678,7 @@ namespace ip
             ErrorIPConflict.Visibility = Visibility.Collapsed;
             ErrorFailedToSetIPAddress.Visibility = Visibility.Visible;
             SuccessStatus.Visibility = Visibility.Collapsed;
-            PingChart.Visibility = Visibility.Collapsed;
+            PingDiagnosticsCard.Visibility = Visibility.Collapsed;
             Notifications.failedToSetIpAddress = false;
             Notifications.failedToSetIpAddressAgain = true;
             RefreshNotifications();
@@ -1399,7 +1693,7 @@ namespace ip
             ErrorIPConflict.Visibility = Visibility.Visible;
             ErrorFailedToSetIPAddress.Visibility = Visibility.Collapsed;
             SuccessStatus.Visibility = Visibility.Collapsed;
-            PingChart.Visibility = Visibility.Collapsed;
+            PingDiagnosticsCard.Visibility = Visibility.Collapsed;
             Notifications.ipConflict = true;
             Notifications.failedToSetIpAddress = false;
             Notifications.failedToSetIpAddressAgain = false;
